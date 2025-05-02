@@ -33,26 +33,28 @@
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       max-width: 960px;
       margin: 0 auto 16px;
-      padding: 0 24px;
+      padding: 0 16px;
     }
     #searchInputWrapper {
       position: relative;
       flex: 1;
-      min-width: 200px;
+      min-width: 180px;
+      max-width: 100%;
     }
     #searchInput {
       width: 100%;
-      padding: 12px 16px 12px 40px;
+      padding: 10px 14px 10px 36px;
       border-radius: 12px;
       border: none;
       font-family: 'Poppins', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       transition: box-shadow 0.3s ease;
+      box-sizing: border-box;
     }
     #searchInput:focus {
       outline: none;
@@ -61,21 +63,23 @@
     #searchInputWrapper::before {
       content: '🔍';
       position: absolute;
-      left: 12px;
+      left: 10px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 18px;
+      font-size: 16px;
       color: #52A7AF;
     }
     #zipRadius {
-      padding: 12px;
+      padding: 10px;
       border-radius: 12px;
       border: none;
       font-family: 'Poppins', sans-serif;
-      font-size: 16px;
+      font-size: 15px;
       background: #fff;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       transition: box-shadow 0.3s ease;
+      min-width: 120px;
+      max-width: 100%;
     }
     #zipRadius:focus {
       outline: none;
@@ -83,33 +87,35 @@
     }
     #filters {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .filter-label {
       display: flex;
       align-items: center;
-      font-size: 14px;
+      font-size: 13px;
       color: #333;
       cursor: pointer;
+      white-space: nowrap;
     }
     .filter-checkbox {
       display: none;
     }
     .filter-toggle {
       position: relative;
-      width: 40px;
-      height: 20px;
+      width: 36px;
+      height: 18px;
       background: #d1d5db;
-      border-radius: 20px;
-      margin-right: 8px;
+      border-radius: 18px;
+      margin-right: 6px;
       transition: background 0.3s ease;
     }
     .filter-toggle::after {
       content: '';
       position: absolute;
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       background: #fff;
       border-radius: 50%;
       top: 2px;
@@ -120,7 +126,7 @@
       background: #52A7AF;
     }
     .filter-checkbox:checked + .filter-toggle::after {
-      transform: translateX(20px);
+      transform: translateX(18px);
     }
     #map {
       height: 600px;
@@ -157,7 +163,7 @@
     #locationList {
       max-width: 960px;
       margin: 24px auto;
-      padding: 0 24px;
+      padding: 0 16px;
       min-height: 0;
       max-height: 500px;
       overflow-y: auto;
@@ -249,13 +255,57 @@
       margin: 24px 0;
       font-style: italic;
     }
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       #controlsRow {
         flex-direction: column;
         align-items: stretch;
+        gap: 10px;
+        padding: 0 12px;
       }
       #searchInputWrapper {
         min-width: 0;
+        width: 100%;
+      }
+      #zipRadius {
+        width: 100%;
+        min-width: 0;
+      }
+      #filters {
+        justify-content: center;
+        gap: 10px;
+      }
+      .filter-label {
+        font-size: 12px;
+      }
+      .filter-toggle {
+        width: 32px;
+        height: 16px;
+      }
+      .filter-toggle::after {
+        width: 12px;
+        height: 12px;
+      }
+      .filter-checkbox:checked + .filter-toggle::after {
+        transform: translateX(16px);
+      }
+    }
+    @media (max-width: 480px) {
+      #trashCounterBar {
+        font-size: 24px;
+        padding: 12px;
+        margin: 16px auto;
+      }
+      #searchInput {
+        font-size: 14px;
+        padding: 8px 12px 8px 32px;
+      }
+      #searchInputWrapper::before {
+        left: 8px;
+        font-size: 14px;
+      }
+      #zipRadius {
+        font-size: 14px;
+        padding: 8px;
       }
       .location-card {
         flex-direction: column;
@@ -264,6 +314,9 @@
         width: 100%;
         height: 160px;
         border-radius: 12px 12px 0 0;
+      }
+      #locationList {
+        padding: 0 12px;
       }
     }
   </style>
@@ -274,7 +327,9 @@
   </div>
 
   <div id="controlsRow">
-    <input type="text" id="searchInput" placeholder="Search name, city, location, ZIP..." style="flex: 1;">
+    <div id="searchInputWrapper">
+      <input type="text" id="searchInput" placeholder="Search name, city, location, ZIP...">
+    </div>
     <select id="zipRadius">
       <option value="10">10 miles</option>
       <option value="25" selected>25 miles</option>
@@ -371,14 +426,13 @@
         }
 
         searchInput.addEventListener("input", debounce(() => {
-          isMapMoved = false; // Reset map moved flag on new search
+          isMapMoved = false;
           applyFilters();
         }, 300));
         zipRadius.addEventListener("change", applyFilters);
         filterRetailers.addEventListener("change", applyFilters);
         filterTrashSites.addEventListener("change", applyFilters);
 
-        // Add listener for map movement
         map.addListener("bounds_changed", debounce(() => {
           if (searchInput.value.trim()) {
             isMapMoved = true;
@@ -468,7 +522,6 @@
           }
         });
 
-        // Apply type filters
         if (showRetailers || showTrash) {
           filtered = filtered.filter(loc => {
             const matchesType =
@@ -481,7 +534,6 @@
           console.log("No type filters applied, showing all valid locations");
         }
 
-        // Apply query filter
         let searchCenter = null;
         if (query && !isMapMoved) {
           const geocoded = await geocodeAddress(query);
@@ -522,16 +574,13 @@
           }
         }
 
-        // Apply radius filter
         if (query) {
           if (isMapMoved) {
-            // Calculate radius based on map bounds
             const bounds = map.getBounds();
             if (bounds) {
               const center = map.getCenter();
               const ne = bounds.getNorthEast();
               const sw = bounds.getSouthWest();
-              // Approximate radius as the distance from center to a corner
               const radiusMeters = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
               searchCenter = center;
               filtered = filtered.filter(loc => {
@@ -551,7 +600,6 @@
               console.log("After map bounds radius filter:", filtered.length, filtered);
             }
           } else if (searchCenter) {
-            // Use selected radius from dropdown
             filtered = filtered.filter(loc => {
               try {
                 const lat = parseFloat(loc.lat);
@@ -570,7 +618,6 @@
           }
         }
 
-        // Sort locations: Retailers first
         filtered.sort((a, b) => {
           if (a.Type === "Retailer" && b.Type !== "Retailer") return -1;
           if (a.Type !== "Retailer" && b.Type === "Retailer") return 1;
