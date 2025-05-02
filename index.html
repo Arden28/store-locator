@@ -159,7 +159,7 @@
       margin: 24px auto;
       padding: 0 24px;
       min-height: 0;
-      max-height: 500px; /* Adjust to show ~4-5 cards */
+      max-height: 500px;
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: #52A7AF #e0e0e0;
@@ -346,7 +346,7 @@
               loc && loc.lat && loc.lng && !isNaN(parseFloat(loc.lat)) && !isNaN(parseFloat(loc.lng))
             );
             console.log("Valid locations:", allLocations.length, allLocations);
-            updateTrashCounter(allLocations); // Update counter with all locations
+            updateTrashCounter(allLocations);
             applyFilters();
           })
           .catch(err => console.error("❌ Fetch error:", err.message, err.stack));
@@ -456,7 +456,6 @@
           }
         });
 
-        // Apply type filters
         if (showRetailers || showTrash) {
           filtered = filtered.filter(loc => {
             const matchesType =
@@ -469,7 +468,6 @@
           console.log("No type filters applied, showing all valid locations");
         }
 
-        // Apply query filter
         if (query) {
           const geocoded = await geocodeAddress(query);
           if (geocoded) {
@@ -508,7 +506,6 @@
           }
         }
 
-        // Apply radius filter only if query is present
         if (query) {
           const searchCenter = map.getCenter();
           filtered = filtered.filter(loc => {
@@ -528,7 +525,6 @@
           console.log("After radius filter:", filtered.length, filtered);
         }
 
-        // Sort locations: Retailers first
         filtered.sort((a, b) => {
           if (a.Type === "Retailer" && b.Type !== "Retailer") return -1;
           if (a.Type !== "Retailer" && b.Type === "Retailer") return 1;
@@ -576,7 +572,7 @@
                 ${loc.Address ? `<div><a href="https://maps.google.com/?q=${encodeURIComponent(loc.Address)}" target="_blank">${loc.Address}</a></div>` : ""}
                 ${loc.Phone ? `<div>📞 <span>${loc.Phone}</span></div>` : ""}
                 ${loc.Hours ? `<div>⏰ <span>${loc.Hours}</span></div>` : ""}
-                ${loc.Website ? `<div>🌐 <a href="${loc.Website}" target="_blank">${loc.Website}</a></div>` : ""}
+                ${loc.Website ? `<div>🌐 <a href="${loc.Website}" target="_blank">Visit Website</a></div>` : ""}
                 ${!isRetailer && formattedDate ? `<div>📅 ${formattedDate}</div>` : ""}
                 ${!isRetailer && loc["Pounds Cleaned"] ? `<div>🧹 ${loc["Pounds Cleaned"]} lbs cleaned</div>` : ""}
               </div>
@@ -624,7 +620,6 @@
           markers.forEach(marker => marker.setMap(map));
         }
 
-        // Update trash counter with all locations, not filtered
         updateTrashCounter(allLocations);
         renderLocationList(filtered);
       } catch (error) {
@@ -640,7 +635,6 @@
         return;
       }
 
-      // Only render the list if search input is non-empty
       if (!searchInput.value.trim()) {
         locationList.innerHTML = '';
         console.log("Search input empty, clearing location list");
@@ -677,7 +671,7 @@
               ${loc.Address ? `<div class="location-card-detail"><a href="https://maps.google.com/?q=${encodeURIComponent(loc.Address)}" target="_blank">${loc.Address}</a></div>` : ""}
               ${loc.Phone ? `<div class="location-card-detail">📞 ${loc.Phone}</div>` : ""}
               ${loc.Hours ? `<div class="location-card-detail">⏰ ${loc.Hours}</div>` : ""}
-              ${loc.Website ? `<div class="location-card-detail"><a href="${loc.Website}" target="_blank">${loc.Website}</a></div>` : ""}
+              ${loc.Website ? `<div class="location-card-detail"><a href="${loc.Website}" target="_blank">Visit Website</a></div>` : ""}
               ${!isRetailer && formattedDate ? `<div class="location-card-detail">📅 ${formattedDate}</div>` : ""}
               ${!isRetailer && loc["Pounds Cleaned"] ? `<div class="location-card-detail">🧹 ${loc["Pounds Cleaned"]} lbs cleaned</div>` : ""}
             </div>
