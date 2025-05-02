@@ -650,6 +650,26 @@
           }
         }
 
+        // If no searchCenter and filtered locations exist, adjust map to show all filtered locations
+        if (query && !isMapMoved && !searchCenter && filtered.length > 0) {
+          const bounds = new google.maps.LatLngBounds();
+          filtered.forEach(loc => {
+            const lat = parseFloat(loc.lat);
+            const lng = parseFloat(loc.lng);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              bounds.extend(new google.maps.LatLng(lat, lng));
+            }
+          });
+          map.fitBounds(bounds);
+          // Ensure zoom doesn't exceed a reasonable level
+          google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+            if (map.getZoom() > 12) {
+              map.setZoom(12);
+            }
+          });
+          console.log("Map adjusted to fit filtered locations:", filtered.length);
+        }
+
         filtered.sort((a, b) => {
           if (a.Type === "Retailer" && b.Type !== "Retailer") return -1;
           if (a.Type !== "Retailer" && b.Type === "Retailer") return 1;
