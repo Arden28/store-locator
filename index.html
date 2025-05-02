@@ -307,6 +307,7 @@
     let markerCluster;
     let allLocations = [];
     let infoWindows = [];
+    let isMapMoved = false;
 
     function initMap() {
       try {
@@ -369,10 +370,21 @@
           return;
         }
 
-        searchInput.addEventListener("input", debounce(applyFilters, 300));
+        searchInput.addEventListener("input", debounce(() => {
+          isMapMoved = false; // Reset map moved flag on new search
+          applyFilters();
+        }, 300));
         zipRadius.addEventListener("change", applyFilters);
         filterRetailers.addEventListener("change", applyFilters);
         filterTrashSites.addEventListener("change", applyFilters);
+
+        // Add listener for map movement
+        map.addListener("bounds_changed", debounce(() => {
+          if (searchInput.value.trim()) {
+            isMapMoved = true;
+            applyFilters();
+          }
+        }, 300));
       } catch (error) {
         console.error("❌ initMap error:", error.message, error.stack);
       }
@@ -439,7 +451,7 @@
         const showRetailers = filterRetailers.checked;
         const showTrash = filterTrashSites.checked;
 
-        console.log("Applying filters:", { query, radius, showRetailers, showTrash });
+        console.log("Applying filters:", { query, radius, showRetailers, showTrash, isMapMoved });
 
         let filtered = allLocations.filter(loc => {
           try {
@@ -456,6 +468,7 @@
           }
         });
 
+        // Apply type filters
         if (showRetailers || showTrash) {
           filtered = filtered.filter(loc => {
             const matchesType =
@@ -468,11 +481,14 @@
           console.log("No type filters applied, showing all valid locations");
         }
 
-        if (query) {
+        // Apply query filter
+        let searchCenter = null;
+        if (query && !isMapMoved) {
           const geocoded = await geocodeAddress(query);
           if (geocoded) {
             map.setCenter(geocoded);
             map.setZoom(12);
+            searchCenter = geocoded;
             filtered = filtered.filter(loc => {
               try {
                 const matchesQuery =
@@ -506,25 +522,55 @@
           }
         }
 
+        // Apply radius filter
         if (query) {
-          const searchCenter = map.getCenter();
-          filtered = filtered.filter(loc => {
-            try {
-              const lat = parseFloat(loc.lat);
-              const lng = parseFloat(loc.lng);
-              const inRadius = google.maps.geometry.spherical.computeDistanceBetween(
-                searchCenter,
-                new google.maps.LatLng(lat, lng)
-              ) <= radius * 1609.34;
-              return inRadius;
-            } catch (error) {
-              console.error("Error applying radius filter for location:", loc, error.message);
-              return false;
+          if (isMapMoved) {
+            // Calculate radius based on map bounds
+            const bounds = map.getBounds();
+            if (bounds) {
+              const center = map.getCenter();
+              const ne = bounds.getNorthEast();
+              const sw = bounds.getSouthWest();
+              // Approximate radius as the distance from center to a corner
+              const radiusMeters = google.maps.geometry.spherical.computeDistanceBetween(center, ne);
+              searchCenter = center;
+              filtered = filtered.filter(loc => {
+                try {
+                  const lat = parseFloat(loc.lat);
+                  const lng = parseFloat(loc.lng);
+                  const inRadius = google.maps.geometry.spherical.computeDistanceBetween(
+                    searchCenter,
+                    new google.maps.LatLng(lat, lng)
+                  ) <= radiusMeters;
+                  return inRadius;
+                } catch (error) {
+                  console.error("Error applying map bounds radius filter for location:", loc, error.message);
+                  return false;
+                }
+              });
+              console.log("After map bounds radius filter:", filtered.length, filtered);
             }
-          });
-          console.log("After radius filter:", filtered.length, filtered);
+          } else if (searchCenter) {
+            // Use selected radius from dropdown
+            filtered = filtered.filter(loc => {
+              try {
+                const lat = parseFloat(loc.lat);
+                const lng = parseFloat(loc.lng);
+                const inRadius = google.maps.geometry.spherical.computeDistanceBetween(
+                  searchCenter,
+                  new google.maps.LatLng(lat, lng)
+                ) <= radius * 1609.34;
+                return inRadius;
+              } catch (error) {
+                console.error("Error applying radius filter for location:", loc, error.message);
+                return false;
+              }
+            });
+            console.log("After radius filter:", filtered.length, filtered);
+          }
         }
 
+        // Sort locations: Retailers first
         filtered.sort((a, b) => {
           if (a.Type === "Retailer" && b.Type !== "Retailer") return -1;
           if (a.Type !== "Retailer" && b.Type === "Retailer") return 1;
