@@ -160,9 +160,18 @@
       color: #52A7AF;
       margin-bottom: 8px;
     }
+    #resultsCount {
+      max-width: 960px;
+      margin: 16px auto 8px;
+      padding: 0 16px;
+      font-size: 16px;
+      color: #4b5563;
+      text-align: left;
+      font-weight: 600;
+    }
     #locationList {
       max-width: 960px;
-      margin: 24px auto;
+      margin: 0 auto 24px;
       padding: 0 16px;
       min-height: 0;
       max-height: 500px;
@@ -288,6 +297,10 @@
       .filter-checkbox:checked + .filter-toggle::after {
         transform: translateX(16px);
       }
+      #resultsCount {
+        font-size: 15px;
+        padding: 0 12px;
+      }
     }
     @media (max-width: 480px) {
       #trashCounterBar {
@@ -316,6 +329,10 @@
         border-radius: 12px 12px 0 0;
       }
       #locationList {
+        padding: 0 12px;
+      }
+      #resultsCount {
+        font-size: 14px;
         padding: 0 12px;
       }
     }
@@ -351,6 +368,7 @@
   </div>
 
   <div id="map"></div>
+  <div id="resultsCount"></div>
   <div id="locationList"></div>
 
   <script src="https://unpkg.com/@googlemaps/markerclusterer@2.5.3/dist/index.min.js"></script>
@@ -722,22 +740,27 @@
 
     function renderLocationList(locations) {
       const locationList = document.getElementById("locationList");
+      const resultsCount = document.getElementById("resultsCount");
       const searchInput = document.getElementById("searchInput");
-      if (!locationList || !searchInput) {
-        console.error("❌ Location list or search input missing");
+      if (!locationList || !resultsCount || !searchInput) {
+        console.error("❌ DOM elements missing:", { locationList, resultsCount, searchInput });
         return;
       }
 
       if (!searchInput.value.trim()) {
+        resultsCount.textContent = "Enter a search to see results";
         locationList.innerHTML = '';
         console.log("Search input empty, clearing location list");
         return;
       }
 
       if (locations.length === 0) {
+        resultsCount.textContent = "No locations found";
         locationList.innerHTML = '<div class="no-results">No locations found</div>';
         return;
       }
+
+      resultsCount.textContent = `Showing ${locations.length} location${locations.length === 1 ? '' : 's'}`;
 
       locationList.innerHTML = locations.map((loc, index) => {
         const isRetailer = loc.Type === "Retailer";
