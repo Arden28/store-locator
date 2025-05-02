@@ -159,6 +159,21 @@
       margin: 24px auto;
       padding: 0 24px;
       min-height: 0;
+      max-height: 500px; /* Adjust to show ~4-5 cards */
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #52A7AF #e0e0e0;
+    }
+    #locationList::-webkit-scrollbar {
+      width: 8px;
+    }
+    #locationList::-webkit-scrollbar-track {
+      background: #e0e0e0;
+      border-radius: 4px;
+    }
+    #locationList::-webkit-scrollbar-thumb {
+      background: #52A7AF;
+      border-radius: 4px;
     }
     .location-card {
       background: #fff;
@@ -331,7 +346,7 @@
               loc && loc.lat && loc.lng && !isNaN(parseFloat(loc.lat)) && !isNaN(parseFloat(loc.lng))
             );
             console.log("Valid locations:", allLocations.length, allLocations);
-            updateTrashCounter(allLocations);
+            updateTrashCounter(allLocations); // Update counter with all locations
             applyFilters();
           })
           .catch(err => console.error("❌ Fetch error:", err.message, err.stack));
@@ -513,6 +528,13 @@
           console.log("After radius filter:", filtered.length, filtered);
         }
 
+        // Sort locations: Retailers first
+        filtered.sort((a, b) => {
+          if (a.Type === "Retailer" && b.Type !== "Retailer") return -1;
+          if (a.Type !== "Retailer" && b.Type === "Retailer") return 1;
+          return 0;
+        });
+
         if (markerCluster) {
           markerCluster.clearMarkers();
           markerCluster.setMap(null);
@@ -602,7 +624,8 @@
           markers.forEach(marker => marker.setMap(map));
         }
 
-        updateTrashCounter(filtered);
+        // Update trash counter with all locations, not filtered
+        updateTrashCounter(allLocations);
         renderLocationList(filtered);
       } catch (error) {
         console.error("❌ applyFilters error:", error.message, error.stack);
@@ -637,7 +660,7 @@
         console.log("Processed images for", loc["Location Name"], ":", images);
         const imageSrc = images.length > 0
           ? images[0].replace("?dl=0", "?raw=1")
-          : 'https://placehold.co/80x80/52A7AF/FFFFFF?text=Location';
+          : 'https://placehold.co/100x100/52A7AF/FFFFFF?text=Location';
         const date = loc["Pickup Date"];
         let formattedDate = date || "";
         if (date?.includes("-")) {
