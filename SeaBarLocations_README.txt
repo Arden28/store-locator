@@ -24,3 +24,11 @@ This HTML file creates an interactive webpage displaying SeaBar retail and clean
   - Debounces search input and map bounds changes for performance.
 
 The code ensures a responsive, user-friendly interface with error handling for robust operation.
+
+For any further questions or support, feel free to reach out to me
+
+Name: Arden BOUET
+Phone: +254745908026
+Email: laudbouetoumoussa@gmail.com
+
+Looking foward to hear from you!
